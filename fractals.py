@@ -88,7 +88,7 @@ class Mandelbrot(Fractal):
         fractal = np.matlib.zeros(c.shape, dtype=float)
         escaped = np.matlib.zeros(c.shape, dtype=bool)
 
-        for i in xrange(itermax):
+        for i in range(itermax):
             # Mandelbrot uses function: f(z) = z^p + c; z, p are const.
             z = np.power(z, p) + c
 
@@ -122,7 +122,7 @@ class Julia(Fractal):
         # Create matrix to represent this fractal.
         fractal = np.matlib.zeros(z.shape, dtype=float)
 
-        for i in xrange(itermax):
+        for i in range(itermax):
             # Julia set uses function: f(z) = z^p + c; c, p are const.
             z = np.power(z, p) + c
 
@@ -217,7 +217,7 @@ class Newton(Fractal):
         # Matrix of number of iterations required to reach solution.
         root_iters = np.matlib.zeros(z.shape)
 
-        for i in xrange(itermax):
+        for i in range(itermax):
             z = f.newtonsMethod(z, a)
 
             # Increment points where solutions have been found.
