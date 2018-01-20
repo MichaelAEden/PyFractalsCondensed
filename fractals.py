@@ -19,32 +19,44 @@ np.warnings.filterwarnings("ignore")
 
 class Fractal(object):
 
-    def render(self, n=300, m=300, itermax=50,
-            xmin=-1.0, xmax=1.0, ymin=-1.0, ymax=1.0,
+    def render(self, width=300, height=300, zoom=None, itermax=50,
             colors=5, color_offset=0.5, **kwargs):
         """
         Return RGB image representing fractal.
 
-        :param n: Pixel resolution in x-axis
-        :param m: Pixel resolution in y-axis
+        :param width: Pixel resolution in x-axis
+        :param height: Pixel resolution in y-axis
         :param itermax: Maximum number of iterations
-        :param xmin: Minimum x-coord (real number line)
-        :param xmax: Maximum x-coord (real number line)
-        :param ymin: Minimum y-coord (imag number line)
-        :param ymax: Maximum y-coord (imag number line)
+        :param zoom: Tuple containing (x-min, x-max, y-min, y-max)
         :param colors: Number of colors (hues) included in the rendered image
         """
-        complex_plane = self._complexPlane(n, m, xmin, xmax, ymin, ymax)
+        if zoom is None:
+            zoom = self._defaultZoom()
+
+        complex_plane = self._complexPlane(width, height, *zoom)
         fractal = self._computeFractal(complex_plane, itermax, **kwargs)
         rgb_image = self._toRgbImage(fractal, colors, color_offset)
-        return rgb_image
+
+        # Display fractal on screen.
+        self._show(rgb_image)
+
+    def _show(self, a):
+        """
+        Display given RGB array.
+
+        :type a: np.ndarray
+        """
+        fig = plt.figure()
+        fig.set_size_inches((2, 2))
+        ax = plt.Axes(fig, [0., 0., 1., 1.])
+        ax.set_axis_off()
+        fig.add_axes(ax)
+        plt.set_cmap('hot')
+        ax.imshow(a, aspect='equal')
+        plt.show()
 
     def _toRgbImage(self, fractal, colors, color_offset):
-        """
-        Converts the generated fractal into an RGB image array
-        
-        :return: ndarry of shape (n, m, 3)
-        """
+        """Converts the generated fractal into an RGB image array."""
         hsv_img = np.array(
             [
                 # Cycle through color wheel.
@@ -74,13 +86,17 @@ class Fractal(object):
         complex_plane = real_part + imag_part
         return complex_plane
 
+    def _defaultZoom(self):
+        """Return default zoom setting."""
+        return (-1.0, 1.0, -1.0, 1.0)
+
 
 # {{{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 # }}} Mandelbrot Fractal
 
 class Mandelbrot(Fractal):
 
-    def _computeFractal(self, complex_plane, itermax, p=2, smooth=True):
+    def _computeFractal(self, complex_plane, itermax, p=2):
         c = complex_plane
         z = np.copy(c)
 
@@ -109,6 +125,9 @@ class Mandelbrot(Fractal):
 
         return fractal
 
+    def _defaultZoom(self):
+        return (-2.0, 1.0, -1.5, 1.5)
+
 
 # {{{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 # }}} Julia Fractal
@@ -116,7 +135,8 @@ class Mandelbrot(Fractal):
 class Julia(Fractal):
 
     def _computeFractal(
-            self, complex_plane, itermax, p=2, c=complex(0.25, -0.54)):
+            self, complex_plane, itermax, p=2, c1=0.25, c2=-0.54):
+        c = complex(c1, c2)
         z = complex_plane
 
         # Create matrix to represent this fractal.
@@ -163,6 +183,9 @@ class Julia(Fractal):
 
         rgb_img = (mpl.colors.hsv_to_rgb(hsv_img) * 255).astype(dtype=np.uint8)
         return rgb_img
+
+    def _defaultZoom(self):
+        return (-1.25, 1.25, -1.25, 1.25)
 
 
 # {{{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -245,26 +268,12 @@ class Newton(Fractal):
 
         return rgb_image.T
 
+    def _defaultZoom(self):
+        return (-3.0, 3.0, -3.0, 3.0)
+
 
 # {{{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 # }}} Rendering
-
-def showImage(a, size=(2, 2)):
-    """
-    Display given RGB array.
-
-    :type a: np.ndarray
-    :param size: Scaling factor of image.
-    """
-    fig = plt.figure()
-    fig.set_size_inches(size)
-    ax = plt.Axes(fig, [0., 0., 1., 1.])
-    ax.set_axis_off()
-    fig.add_axes(ax)
-    plt.set_cmap('hot')
-    ax.imshow(a, aspect='equal')
-    plt.show()
-
 
 def adjustRange(a, vmin=0, vmax=255):
     """
